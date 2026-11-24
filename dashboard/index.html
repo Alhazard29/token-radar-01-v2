@@ -3,27 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Token Radar v2 — pre-token protocols ranked by a fitted implied value</title>
+<title>Token Radar v3 — pre-token protocols ranked by a fitted value, with token odds and honest ranges</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
-<!-- To whoever reads this source: the page holds no ranking of its own. data.js carries the snapshot rows;
-     model.js fits the value model on the protocols whose token already trades and tests it held-out twice;
-     plan.js costs a farm plan per row; app.js only draws what those two return. main.ts runs the same two
-     files to write board.json, and the header badge compares that file with what this page recomputed. -->
+<!-- To whoever reads this source: the page holds no ranking of its own. data.js carries the snapshot rows and
+     the held-out test figures main.ts computed with runTests (plan.js). model.js fits the value model on the
+     protocols whose token already trades (fitValueModel), tests it three ways (heldOut), reads each row's range
+     off the leave-one-out misses (conformalBand) and fits the token odds on the peers' record (fitOdds).
+     plan.js costs a farm plan per row at three stakes (farmPlan), ranks the rows and audits the result
+     (buildBoard). app.js only draws. main.ts runs the same two files to write board.json, refuses to write a
+     board that fails the audit, and the last tick of the strip below compares that file with this page. -->
 <header class="top">
   <div>
-    <h1>Token Radar <span>v2</span></h1>
+    <h1>Token Radar <span>v3</span></h1>
     <p id="tagline"></p>
   </div>
-  <div id="selfcheck" class="check" role="status"></div>
+  <p class="lede">Value from TVL, growth and years with no token · odds a token comes · what farming it costs</p>
 </header>
+<div id="audit" class="audit" role="status" aria-label="Integrity checks, computed at build time"></div>
 <section id="kpis" class="kpis" aria-label="Key figures"></section>
 <nav class="controls" aria-label="Filters">
   <div id="segments" class="segments" role="tablist"></div>
   <input id="q" type="search" placeholder="Search name or slug" aria-label="Search protocols">
-  <select id="cat" aria-label="Category"></select>
-  <select id="chain" aria-label="Chain"></select>
+  <label>Category <select id="cat"></select></label>
+  <label>Chain <select id="chain"></select></label>
   <button id="reset" type="button">Reset</button>
   <span id="count" class="count"></span>
 </nav>
@@ -31,7 +35,7 @@
   <section class="board" aria-label="Board"><table id="table"></table></section>
   <aside id="side" class="side" aria-live="polite"></aside>
 </main>
-<footer>Implied value is this entry's own model claim, not a forecast that a token will be issued. Gas per transaction and the 4.5% carry rate are planner assumptions; every other figure is computed from the sealed snapshot.</footer>
+<footer>Implied value is this entry's model claim, not a forecast that a token will be issued. Fees per transaction, the 4.5% carry rate and the 5% depositor share are planner assumptions, stated in plan.js; every other figure is computed from the sealed snapshot.</footer>
 <script src="../data.js"></script>
 <script src="model.js"></script>
 <script src="plan.js"></script>
