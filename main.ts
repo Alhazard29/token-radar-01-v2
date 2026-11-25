@@ -7,7 +7,7 @@
 // ranking with the board written here, so a screen and a file that disagree would say so on the page.
 // The held-out tests (runTests, a few seconds) run here once and travel to the page in data.js.
 
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import './dashboard/model.js';
@@ -84,13 +84,13 @@ function refusal(): string | null {
 const why = refusal();
 if (why !== null) stop(`the board would be refused: ${why}`);
 
+// Only create and write: the grader hands over an output directory this program does not own, so a
+// change of mode on it is refused. Nothing here sets modes, owners or times, or removes anything.
 function put(path: string, body: string | Uint8Array): void {
   writeFileSync(path, body);
-  chmodSync(path, 0o644);
 }
 function dir(path: string): void {
   mkdirSync(path, { recursive: true });
-  chmodSync(path, 0o755);
 }
 
 dir(outDir);
@@ -109,7 +109,6 @@ function copyFlat(name: string): number {
   for (const file of readdirSync(from).sort()) {
     if (file.startsWith('.') || !statSync(join(from, file)).isFile()) continue;
     copyFileSync(join(from, file), join(to, file));
-    chmodSync(join(to, file), 0o644);
     n++;
   }
   return n;
